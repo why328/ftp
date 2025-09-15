@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>用户删除 - layui</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../../lib/layui-v2.6.3/css/layui.css" media="all">
+    <link rel="stylesheet" href="../../css/public.css" media="all">
+	<style>
+		.myequired{
+			color: red;
+			font-size: 20px;
+			position: absolute;
+			top: 13px;
+			left: 55px;
+		}
+	
+	</style>
+
+    <style>
+        body {
+            background-color: #ffffff;
+            padding: 20px;
+        }
+        .layui-form-item .layui-input[readonly] {
+            background-color: #f5f5f5;
+            color: #666;
+        }
+        .delete-warning {
+            color: #ff4d4f;
+            padding: 10px 15px;
+            background-color: #fff7f7;
+            border-left: 4px solid #ff4d4f;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        .confirm-input {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px dashed #e6e6e6;
+        }
+    </style>
+</head>
+<body>
+<div class="layui-form layuimini-form">
+    <div class="delete-warning">
+        <i class="layui-icon layui-icon-warning"></i>
+        警告：删除用户操作不可逆，请确认后再提交！
+    </div>
+    
+    <!-- 这些字段保持只读，显示用户信息 -->
+    <div class="layui-form-item">
+        <label class="layui-form-label"><span class="myequired">*</span>用户名</label>
+        <div class="layui-input-block">
+            <input type="text" name="Username" placeholder="用户名" value="" class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label"><span class="myequired">*</span>手机号</label>
+        <div class="layui-input-block">
+            <input type="text" name="Phone" placeholder="手机号" value="" class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">邮箱</label>
+        <div class="layui-input-block">
+            <input type="text" name="Email" placeholder="邮箱" value="" class="layui-input">
+        </div>
+    </div>
+	<div class="layui-form-item">
+	    <label class="layui-form-label"><span class="myequired">*</span>用户ID</label>
+	    <div class="layui-input-block">
+	        <input type="text" name="id" placeholder="用户ID" value="" class="layui-input">
+	    </div>
+	</div>
+	
+	<!-- 确认删除的输入验证 -->
+	<div class="layui-form-item confirm-input">
+	    <label class="layui-form-label"><span class="myequired">*</span>确认删除</label>
+	    <div class="layui-input-block">
+	        <input type="text" name="confirmDelete" lay-verify="confirmDelete" 
+	               placeholder="请输入 '确认删除' 进行操作" class="layui-input">
+	        <div class="layui-form-mid layui-word-aux">输入"确认删除"四个字以确认操作</div>
+	    </div>
+	</div>
+
+    <div class="layui-form-item">
+        <div class="layui-input-block">
+            <button class="layui-btn layui-btn-danger" lay-submit lay-filter="deleteBtn">确认删除</button>
+            <button type="button" class="layui-btn layui-btn-normal" id="cancelBtn">取消</button>
+        </div>
+    </div>
+</div>
+<script src="../../lib/layui-v2.6.3/layui.js" charset="utf-8"></script>
+<script>
+    layui.use(['form', 'layer'], function () {
+        var form = layui.form
+            , layer = layui.layer;
+
+        // 添加删除确认验证
+        form.verify({
+            confirmDelete: function(value) {
+                if (value !== '确认删除') {
+                    return '请输入"确认删除"以确认操作';
+                }
+            }
+        });
+
+      // 监听“确认删除”提交
+      form.on('submit(deleteBtn)', function (data) {
+          // 显示确认提示
+          layer.confirm(
+              '确定要删除以下用户吗？\n此操作不可逆，删除后数据将无法恢复！\n\n用户ID：' + data.field.id + '\n用户名：' + data.field.Username,
+              {
+                  title: '删除用户确认',
+                  icon: 2,  // 警告图标
+                  btn: ['确认删除', '取消'],
+                  btnAlign: 'c'
+              },
+              function (confirmIndex) {
+                  // 显示加载提示
+                  let loadIndex = layer.load(2, {
+                      shade: 0.3,
+                      content: '正在处理删除操作...',
+                      shadeClose: false
+                  });
+                  
+                  // 模拟处理过程
+                  setTimeout(function () {
+                      layer.close(loadIndex); 
+                      
+                      // 显示操作结果
+                      layer.alert(
+                          '用户删除操作已完成！\n用户ID：' + data.field.id + '\n用户名：' + data.field.Username,
+                          {
+                              title: '操作成功',
+                              icon: 1,
+                              closeBtn: 1,
+                              end: function () {
+                                  // 关闭当前页面（如果是在iframe中）
+                                  var parentIndex = parent.layer.getFrameIndex(window.name);
+                                  if (parentIndex) {
+                                      parent.layer.close(parentIndex);
+                                  }
+                              }
+                          }
+                      );
+                  }, 1500); 
+      
+                  layer.close(confirmIndex); 
+              }
+          );
+          return false; // 阻止表单默认提交
+      });
+      
+      // 取消按钮事件
+      document.getElementById('cancelBtn').addEventListener('click', function() {
+          // 关闭当前页面（如果是在iframe中）
+          var parentIndex = parent.layer.getFrameIndex(window.name);
+          if (parentIndex) {
+              parent.layer.close(parentIndex);
+          } else {
+              // 如果不是在iframe中，可以返回上一页
+              history.back();
+          }
+      });
+      
+    });
+</script>
+
+</body>
+</html>

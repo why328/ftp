@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>评价查询与删除</title>
+    <link rel="stylesheet" href="../lib/layui-v2.6.3/css/layui.css">
+    <style>
+        body { margin: 0; padding: 0; background-color: #f5f6f8; }
+        .header { height: 50px; line-height: 50px; background: #2f4050; color: #fff; padding: 0 20px; }
+        .container { padding: 20px; }
+        .card { background: #fff; border-radius: 4px; padding: 20px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .filter-group { margin-bottom: 20px; padding: 15px; background: #f9f9f9; border-radius: 4px; }
+        .layui-form-item { margin-bottom: 15px; }
+        .star { color: #FFD700; }
+        .star-empty { color: #ddd; }
+        .status { padding: 2px 8px; border-radius: 4px; font-size: 12px; }
+        .status-normal { background: #e8f4fd; color: #1E9FFF; }
+        .img-thumb { width: 40px; height: 40px; margin: 0 3px; display: inline-block; }
+        .img-thumb img { width: 100%; height: 100%; object-fit: cover; }
+        .empty-state { text-align: center; padding: 60px 0; color: #999; }
+        .del-btn { background-color: #FF5722; }
+        .del-btn:hover { background-color: #f53f3f; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2 style="margin: 0; font-size: 16px;">评价查询与删除</h2>
+    </div>
+
+    <div class="container">
+        <div class="card">
+            <!-- 查询区域 -->
+            <div class="filter-group">
+                <form class="layui-form" lay-filter="reviewFilter">
+                    <div class="layui-form-item">
+                        <div class="layui-input-inline" style="width: 180px;">
+                            <input type="text" name="reviewId" placeholder="评价ID" class="layui-input">
+                        </div>
+                        <div class="layui-input-inline" style="width: 180px;">
+                            <input type="text" name="tradeId" placeholder="关联交易ID" class="layui-input">
+                        </div>
+                        <div class="layui-input-inline" style="width: 180px;">
+                            <input type="text" name="userId" placeholder="评价人ID" class="layui-input">
+                        </div>
+                        <div class="layui-input-inline" style="width: 120px;">
+                            <select name="star">
+                                <option value="">全部星级</option>
+                                <option value="5">5星</option>
+                                <option value="4">4星</option>
+                                <option value="3">3星</option>
+                                <option value="2">2星</option>
+                                <option value="1">1星</option>
+                            </select>
+                        </div>
+                        <button class="layui-btn" lay-submit lay-filter="search">查询</button>
+                        <button type="button" class="layui-btn layui-btn-primary" id="reset">重置</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- 评价列表 -->
+            <table class="layui-table" lay-size="sm">
+                <thead>
+                    <tr>
+                        <th>评价ID</th>
+                        <th>交易ID</th>
+                        <th>评价人</th>
+                        <th>星级</th>
+                        <th>评价内容</th>
+                        <th>评价时间</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="reviewList">
+                    <tr>
+                        <td colspan="7" class="empty-state">
+                            <i class="layui-icon layui-icon-search" style="font-size: 48px; margin-bottom: 10px; display: block;"></i>
+                            <p>请输入查询条件搜索评价</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="../lib/layui-v2.6.3/layui.js"></script>
+    <script>
+        layui.use(['form', 'layer', 'jquery'], function() {
+            const form = layui.form;
+            const layer = layui.layer;
+            const $ = layui.jquery;
+
+            // 渲染星级
+            function renderStar(star) {
+                let html = '';
+                for (let i = 1; i <= 5; i++) {
+                    html += i <= star ? 
+                        '<i class="layui-icon layui-icon-star star"></i>' : 
+                        '<i class="layui-icon layui-icon-star star-empty"></i>';
+                }
+                return html;
+            }
+
+            // 渲染评价图片
+            function renderImages(images) {
+                if (!images || images.length === 0) return '';
+                let html = '';
+                images.forEach(img => {
+                    html += `<div class="img-thumb"><img src="${img}" alt="评价图片"></div>`;
+                });
+                return html;
+            }
+
+            // 模拟评价数据
+            const mockReviews = [
+                {
+                    reviewId: 'REV20241001',
+                    tradeId: 'TRA20240928',
+                    userId: 'U10001',
+                    userName: '张三',
+                    star: 5,
+                    content: '商品质量很好，非常满意的一次交易',
+                    images: ['https://picsum.photos/id/26/200/200', 'https://picsum.photos/id/27/200/200'],
+                    time: '2024-10-01 14:30:25'
+                },
+                {
+                    reviewId: 'REV20240930',
+                    tradeId: 'TRA20240925',
+                    userId: 'U10008',
+                    userName: '李四',
+                    star: 3,
+                    content: '商品还行，就是物流有点慢',
+                    images: [],
+                    time: '2024-09-30 09:15:40'
+                },
+                {
+                    reviewId: 'REV20240929',
+                    tradeId: 'TRA20240922',
+                    userId: 'U10015',
+                    userName: '王五',
+                    star: 1,
+                    content: '商品与描述不符，不推荐购买',
+                    images: ['https://picsum.photos/id/42/200/200'],
+                    time: '2024-09-29 16:45:10'
+                }
+            ];
+
+            // 查询评价
+            form.on('submit(search)', function(data) {
+                const params = data.field;
+                $('#reviewList').html(`
+                    <tr>
+                        <td colspan="7" class="empty-state">
+                            <i class="layui-icon layui-icon-loading layui-icon-anim-rotate" style="font-size: 36px;"></i>
+                            <p>查询中...</p>
+                        </td>
+                    </tr>
+                `);
+
+                // 模拟API请求延迟
+                setTimeout(() => {
+                    // 筛选数据
+                    let results = mockReviews.filter(review => {
+                        if (params.reviewId && !review.reviewId.includes(params.reviewId)) return false;
+                        if (params.tradeId && !review.tradeId.includes(params.tradeId)) return false;
+                        if (params.userId && !review.userId.includes(params.userId)) return false;
+                        if (params.star && review.star != params.star) return false;
+                        return true;
+                    });
+
+                    // 渲染结果
+                    if (results.length === 0) {
+                        $('#reviewList').html(`
+                            <tr>
+                                <td colspan="7" class="empty-state">
+                                    <i class="layui-icon layui-icon-info-circle" style="font-size: 48px; margin-bottom: 10px; display: block;"></i>
+                                    <p>未找到符合条件的评价</p>
+                                </td>
+                            </tr>
+                        `);
+                        return;
+                    }
+
+                    let html = '';
+                    results.forEach(review => {
+                        html += `
+                        <tr>
+                            <td>${review.reviewId}</td>
+                            <td>${review.tradeId}</td>
+                            <td>${review.userId}（${review.userName}）</td>
+                            <td>${renderStar(review.star)}</td>
+                            <td>
+                                ${review.content}
+                                ${renderImages(review.images)}
+                            </td>
+                            <td>${review.time}</td>
+                            <td>
+                                <button class="layui-btn layui-btn-xs del-btn" 
+                                        onclick="deleteReview('${review.reviewId}')">
+                                    <i class="layui-icon layui-icon-delete"></i> 删除
+                                </button>
+                            </td>
+                        </tr>
+                        `;
+                    });
+                    $('#reviewList').html(html);
+                }, 800);
+
+                return false;
+            });
+
+            // 重置查询条件
+            $('#reset').click(function() {
+                $('form')[0].reset();
+                form.render();
+                $('#reviewList').html(`
+                    <tr>
+                        <td colspan="7" class="empty-state">
+                            <i class="layui-icon layui-icon-search" style="font-size: 48px; margin-bottom: 10px; display: block;"></i>
+                            <p>请输入查询条件搜索评价</p>
+                        </td>
+                    </tr>
+                `);
+            });
+
+            // 删除评价函数
+            window.deleteReview = function(reviewId) {
+                layer.confirm(`确定要删除评价 ${reviewId} 吗？此操作不可恢复。`, {
+                    title: '删除确认',
+                    btn: ['确认删除', '取消']
+                }, function(index) {
+                    // 模拟删除操作
+                    layer.load(2);
+                    setTimeout(() => {
+                        layer.closeAll('loading');
+                        // 从DOM中移除该评价行
+                        $(`tr:contains('${reviewId}')`).remove();
+                        
+                        // 检查是否还有数据
+                        if ($('#reviewList tr').length === 0) {
+                            $('#reviewList').html(`
+                                <tr>
+                                    <td colspan="7" class="empty-state">
+                                        <i class="layui-icon layui-icon-info-circle" style="font-size: 48px; margin-bottom: 10px; display: block;"></i>
+                                        <p>未找到符合条件的评价</p>
+                                    </td>
+                                </tr>
+                            `);
+                        }
+                        
+                        layer.msg(`评价 ${reviewId} 已成功删除`, {icon: 1});
+                    }, 800);
+                    layer.close(index);
+                });
+            }
+        });
+    </script>
+</body>
+</html>
+    

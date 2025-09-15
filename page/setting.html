@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>自由商品交易平台 - 系统设置</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../lib/layui-v2.6.3/css/layui.css" media="all">
+    <link rel="stylesheet" href="../css/public.css" media="all">
+    <style>
+        /* 交易场景专属样式：区分配置模块、增强提示可读性 */
+        .layui-form-item .layui-input-company {width: auto;padding-right: 10px;line-height: 38px;}
+        .trade-setting-group {margin-bottom: 25px;padding-bottom: 15px;border-bottom: 1px dashed #e6e6e6;}
+        .trade-setting-group:last-child {border-bottom: none;}
+        .trade-setting-title {font-size: 16px;font-weight: 600;color: #1E9FFF;margin-bottom: 15px;}
+        .trade-tip {color: #666;font-size: 12px;margin-top: 5px;line-height: 1.5;}
+    </style>
+</head>
+<body>
+<div class="layuimini-container">
+    <div class="layuimini-main">
+        <!-- 表单标题：明确交易平台属性 -->
+        <h2 style="text-align: center;margin: 20px 0;">自由商品交易平台（内部使用）- 系统设置</h2>
+
+        <div class="layui-form layuimini-form">
+            <!-- 一、平台基础信息配置（替换原网站信息，适配内部交易场景） -->
+            <div class="trade-setting-group">
+                <div class="trade-setting-title">1. 平台基础信息</div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label required">平台名称</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="platformName" lay-verify="required" lay-reqtext="平台名称不能为空" 
+                               placeholder="请输入内部交易平台名称" value="XX公司内部商品交易平台" class="layui-input">
+                        <div class="trade-tip">示例：XX部门闲置交换中心、员工物资交易平台（需与用户端首页名称一致）</div>
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label required">内部访问地址</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="platformUrl" lay-verify="required" lay-reqtext="内部访问地址不能为空" 
+                               placeholder="请输入内部可访问的平台链接" value="https://why328.github.io/ftp/page/login.html" class="layui-input">
+                        <div class="trade-tip">仅支持内部局域网地址（如内网IP/内部域名），禁止填写外部公网链接</div>
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label required">平台状态</label>
+                    <div class="layui-input-block">
+                        <input type="radio" name="platformStatus" value="1" title="正常运行" checked>
+                        <input type="radio" name="platformStatus" value="2" title="维护中">
+                        <input type="radio" name="platformStatus" value="3" title="临时关闭">
+                        <div class="trade-tip">维护/关闭时需填写下方“状态提示语”，用户端登录后将弹窗展示</div>
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">状态提示语</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="statusTip" placeholder="如：系统升级中，14:00-16:00暂停服务" class="layui-input">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 二、交易核心规则配置（新增，管控交易流程） -->
+            <div class="trade-setting-group">
+                <div class="trade-setting-title">2. 交易规则配置</div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label required">单笔最大交易金额</label>
+                    <div class="layui-input-inline" style="width: 150px;">
+                        <input type="text" name="maxSingleAmount" lay-verify="required|number" value="5000" class="layui-input">
+                    </div>
+                    <div class="layui-input-inline layui-input-company">元</div>
+                    <div class="layui-form-mid layui-word-aux">超过上限的交易需管理员二次审核，避免内部大额纠纷</div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label required">交易审核开关</label>
+                    <div class="layui-input-block">
+                        <input type="radio" name="tradeAudit" value="1" title="全部交易需审核" checked>
+                        <input type="radio" name="tradeAudit" value="2" title="仅大额交易需审核">
+                        <input type="radio" name="tradeAudit" value="3" title="无需审核">
+                        <div class="trade-tip">推荐选择“仅大额交易需审核”（大额=超过单笔最大金额的50%），平衡效率与合规</div>
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label required">支持交易类型</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="tradeTypes" lay-verify="required" 
+                               value="闲置物资转让|部门物资调配|个人闲置交换|服务互换" class="layui-input">
+                        <div class="trade-tip">多个类型用“|”分隔，用户发布商品时仅能选择配置内的类型，禁止自定义</div>
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label required">交割确认有效期</label>
+                    <div class="layui-input-inline" style="width: 80px;">
+                        <input type="text" name="deliveryValidity" lay-verify="required|number" value="7" class="layui-input">
+                    </div>
+                    <div class="layui-input-inline layui-input-company">天</div>
+                    <div class="layui-form-mid layui-word-aux">交易达成后，双方需在有效期内完成交割并确认，超时自动提醒管理员介入</div>
+                </div>
+            </div>
+
+            <!-- 三、商品与附件配置（优化原文件上传，适配商品场景） -->
+            <div class="trade-setting-group">
+                <div class="trade-setting-title">3. 商品与附件配置</div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label required">商品图片上传限制</label>
+                    <div class="layui-input-inline" style="width: 100px;">
+                        <input type="text" name="goodsImgMaxSize" lay-verify="required|number" value="5120" class="layui-input">
+                    </div>
+                    <div class="layui-input-inline layui-input-company">KB</div>
+                    <div class="layui-form-mid layui-word-aux">单张商品图片最大尺寸（5120KB=5MB），支持png/jpg/jpeg格式</div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label required">单商品图片数量上限</label>
+                    <div class="layui-input-inline" style="width: 80px;">
+                        <input type="text" name="goodsImgMaxCount" lay-verify="required|number" value="5" class="layui-input">
+                    </div>
+                    <div class="layui-input-inline layui-input-company">张</div>
+                    <div class="layui-form-mid layui-word-aux">限制图片数量，避免冗余上传（建议3-5张，清晰展示商品细节即可）</div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label required">交易凭证上传类型</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="certFileTypes" lay-verify="required" 
+                               value="jpg|jpeg|png|pdf" class="layui-input">
+                        <div class="trade-tip">支持的交割凭证格式（如双方签字的交割单、转账截图），用于交易纠纷追溯</div>
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">页面缓存时间</label>
+                    <div class="layui-input-inline" style="width: 80px;">
+                        <input type="text" name="pageCache" lay-verify="number" value="5" class="layui-input">
+                    </div>
+                    <div class="layui-input-inline layui-input-company">分钟</div>
+                    <div class="layui-form-mid layui-word-aux">内部平台建议5-10分钟，减少服务器压力（本地测试可设为0）</div>
+                </div>
+            </div>
+
+            <!-- 四、平台说明与联系配置（替换原META信息，适配内部沟通） -->
+            <div class="trade-setting-group">
+                <div class="trade-setting-title">4. 平台说明与联系</div>
+                <div class="layui-form-item layui-form-text">
+                    <label class="layui-form-label required">平台使用须知</label>
+                    <div class="layui-input-block">
+                        <textarea name="platformNotice" class="layui-textarea" lay-verify="required" lay-reqtext="使用须知不能为空">
+1. 本平台仅用于内部员工/部门间的非盈利性商品交易，禁止外部人员使用、禁止商业盈利售卖；
+2. 发布商品需如实填写信息（如使用年限、是否维修过），虚假信息将下架商品并限制账号；
+3. 交易达成后需在7天内完成交割，交割时建议拍摄/上传交割凭证，避免后续纠纷；
+4. 遇到交易纠纷可联系管理员处理，提交纠纷时需上传相关证据（如聊天记录、商品问题图片）。
+                        </textarea>
+                        <div class="trade-tip">用户端首页“帮助中心”固定展示，支持富文本编辑（可插入序号、换行）</div>
+                    </div>
+                </div>
+                <div class="layui-form-item layui-form-text">
+                    <label class="layui-form-label required">管理员联系方式</label>
+                    <div class="layui-input-block">
+                        <textarea name="adminContact" class="layui-textarea" lay-verify="required" lay-reqtext="联系方式不能为空">
+姓名：张管理员（行政部）
+电话：010-XXXX8888 / 138XXXX1234
+邮箱：trade-admin@company.com
+处理时间：工作日 9:00-18:00（纠纷处理响应≤24小时）
+                        </textarea>
+                        <div class="trade-tip">用户提交纠纷、反馈问题时可见，建议填写2种及以上联系方式，确保沟通顺畅</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 提交与重置按钮：新增重置功能，优化反馈 -->
+            <div class="layui-form-item">
+                <div class="layui-input-block">
+                    <button class="layui-btn layui-btn-normal" lay-submit lay-filter="saveTradeSetting">确认保存配置</button>
+                    <button type="button" class="layui-btn layui-btn-primary" style="margin-left: 15px;" id="resetDefault">重置为默认值</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="../lib/layui-v2.6.3/layui.js" charset="utf-8"></script>
+<script>
+    layui.use(['form', 'layer'], function () {
+        var form = layui.form
+            , layer = layui.layer;
+
+        // 1. 表单验证：补充交易场景专属规则（如金额非负）
+        form.verify({
+            number: function(value) {
+                if (value && isNaN(value)) {
+                    return '请输入有效的数字';
+                }
+                if (value && parseInt(value) < 0) {
+                    return '请输入非负数字';
+                }
+            }
+        });
+
+        // 2. 监听保存提交：优化反馈内容，贴合交易配置场景
+        form.on('submit(saveTradeSetting)', function (data) {
+            // 整理提交信息，用清晰的文本展示（替代原JSON格式，更易读）
+            var submitInfo = `
+【平台基础信息】
+• 平台名称：${data.field.platformName}
+• 内部访问地址：${data.field.platformUrl}
+• 平台状态：${data.field.platformStatus == 1 ? '正常运行' : data.field.platformStatus == 2 ? '维护中' : '临时关闭'}
+• 状态提示语：${data.field.statusTip || '无'}
+
+【交易规则】
+• 单笔最大金额：${data.field.maxSingleAmount}元
+• 审核开关：${data.field.tradeAudit == 1 ? '全部交易需审核' : data.field.tradeAudit == 2 ? '仅大额交易需审核' : '无需审核'}
+• 支持交易类型：${data.field.tradeTypes}
+• 交割有效期：${data.field.deliveryValidity}天
+
+【商品与附件】
+• 商品图片限制：${data.field.goodsImgMaxSize}KB / 单商品${data.field.goodsImgMaxCount}张
+• 交易凭证类型：${data.field.certFileTypes}
+• 页面缓存时间：${data.field.pageCache}分钟
+            `;
+
+            // 弹窗展示保存结果，增强管理员感知
+            parent.layer.alert(submitInfo, {
+                title: '交易平台配置保存成功',
+                icon: 1,
+                area: ['600px', 'auto'], // 适配内容宽度
+                btn: ['确认'],
+                btnAlign: 'c',
+                end: function() {
+                    // 保存后刷新页面，同步最新配置（也可根据需求改为“保留当前输入”）
+                    window.location.reload();
+                }
+            });
+            return false;
+        });
+
+        // 3. 重置为默认值：新增功能，避免手动恢复的繁琐
+        document.getElementById('resetDefault').addEventListener('click', function() {
+            layer.confirm('确定要重置为默认配置吗？当前输入的配置将被覆盖！', {
+                title: '重置确认',
+                icon: 3,
+                btn: ['确认重置', '取消'],
+                btnAlign: 'c'
+            }, function(index) {
+                // 重置表单为默认值（与页面初始值一致）
+                form.val('layui-form', {
+                    'platformName': 'XX公司内部商品交易平台',
+                    'platformUrl': 'http://192.168.1.100/trade',
+                    'platformStatus': '1',
+                    'statusTip': '',
+                    'maxSingleAmount': '5000',
+                    'tradeAudit': '2',
+                    'tradeTypes': '闲置物资转让|部门物资调配|个人闲置交换|服务互换',
+                    'deliveryValidity': '7',
+                    'goodsImgMaxSize': '5120',
+                    'goodsImgMaxCount': '5',
+                    'certFileTypes': 'jpg|jpeg|png|pdf',
+                    'pageCache': '5',
+                    'platformNotice': '1. 本平台仅用于内部员工/部门间的非盈利性商品交易，禁止外部人员使用、禁止商业盈利售卖；\n2. 发布商品需如实填写信息（如使用年限、是否维修过），虚假信息将下架商品并限制账号；\n3. 交易达成后需在7天内完成交割，交割时建议拍摄/上传交割凭证，避免后续纠纷；\n4. 遇到交易纠纷可联系管理员处理，提交纠纷时需上传相关证据（如聊天记录、商品问题图片）。',
+                    'adminContact': '姓名：张管理员（行政部）\n电话：010-XXXX8888 / 138XXXX1234\n邮箱：trade-admin@company.com\n处理时间：工作日 9:00-18:00（纠纷处理响应≤24小时）'
+                });
+                layer.close(index);
+                layer.msg('已重置为默认配置', {icon: 1, time: 1500});

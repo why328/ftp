@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>layui</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../../lib/layui-v2.6.3/css/layui.css" media="all">
+    <link rel="stylesheet" href="../../css/public.css" media="all">
+	<style>
+		.myequired{
+			color: red;
+			font-size: 20px;
+			position: absolute;
+			top: 13px;
+			left: 55px;
+		}
+	
+	</style>
+
+    <style>
+        body {
+            background-color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+<div class="layui-form layuimini-form">
+	<div class="layui-form-item">
+	    <label class="layui-form-label"><span class="myequired">*</span>用户ID</label>
+	    <div class="layui-input-block">
+	        <input type="text" name="id" lay-verify="id" placeholder="请输入ID" value="" class="layui-input">
+	    </div>
+	</div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">用户名</label>
+        <div class="layui-input-block">
+            <input type="text" name="Username" placeholder="请输入用户名" value="" class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">手机号</label>
+        <div class="layui-input-block">
+            <input type="text" name="Phone" placeholder="请输入手机号" value="" class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">邮箱</label>
+        <div class="layui-input-block">
+            <input type="text" name="Email" placeholder="请输入邮箱" value="" class="layui-input">
+        </div>
+    </div>
+	<div class="layui-form-item">
+	    <label class="layui-form-label">注册时间</label>
+	    <div class="layui-input-block">
+	        <input type="text" name="RegDate" placeholder="请输入时间" value="" class="layui-input">
+	    </div>
+	</div>
+	<div class="layui-form-item">
+	      <label class="layui-form-label">用户状态</label>
+	      <div class="layui-input-block">
+	          <input type="checkbox" name="status" lay-skin="switch" lay-filter="switchTest" lay-text="启用|禁用">
+	      </div>
+	</div> 
+	<div class="layui-form-item layui-form-text">
+	    <label class="layui-form-label">备注</label>
+	    <div class="layui-input-block">
+	        <textarea name="remark" class="layui-textarea" placeholder="备注"></textarea>
+	    </div>
+	</div>
+
+    <div class="layui-form-item">
+        <div class="layui-input-block">
+            <button class="layui-btn layui-btn-normal" lay-submit lay-filter="saveBtn">确认添加</button>
+        </div>
+    </div>
+</div>
+<script src="../../lib/layui-v2.6.3/layui.js" charset="utf-8"></script>
+<script>
+    layui.use(['form', 'layedit', 'laydate'], function () {
+        var form = layui.form
+            , layer = layui.layer;
+        //自定义验证规则
+        form.verify({
+            Username: function (value) {
+                let reg = /^[a-zA-Z0-9\w\u4e00-\u9fa5]{1,20}$/;
+				if(!reg.test(value)){
+					return "用户名称是1-20个英文数字下划线汉字";
+				}
+            }
+			,Phone: function (value) {
+			    let reg = /^[1-9]\d*$|^0{11}$/;
+				if(!reg.test(value)){
+					return "手机号必须是整数且为11位";
+				}
+			}
+			,id: function (value) {
+			    let reg = /^[1-9]\d*$|^0$/;
+				if(!reg.test(value)){
+                     return "用户ID必须是整数";
+				}
+			}
+        });
+
+      // 监听“确认添加”提交（原filter为saveBtn，与按钮lay-filter对应）
+             form.on('submit(saveBtn)', function (data) {
+                 layer.confirm(
+                     '确认提交以下用户信息？\n用户名：' + data.field.Username + '\n手机号：' + data.field.Phone + '\n用户ID：' + data.field.id,
+                     {
+                         title: '添加用户确认',
+                         icon: 3,
+                         btn: ['确认添加', '取消'],
+                         btnAlign: 'c'
+                     },
+                     function (confirmIndex) {
+                         let loadIndex = layer.load(2, {
+                             shade: 0.3,
+                             content: '正在添加用户，请稍候...',
+                             shadeClose: false
+                         });
+                         setTimeout(function () {
+                             layer.close(loadIndex); 
+                             layer.alert(
+                                 '用户添加成功！\n用户ID：' + data.field.id + '\n用户名：' + data.field.Username,
+                                 {
+                                     title: '操作成功',
+                                     icon: 1,
+                                     closeBtn: 1,
+                                     end: function () {
+                                         var parentIndex = parent.layer.getFrameIndex(window.name);
+                                         if (parentIndex) {
+                                             parent.layer.close(parentIndex);
+                                             parent.layui.table.reload('userTable');
+                                         }
+                                     }
+                                 }
+                             );
+                         }, 1500); 
+     
+                         layer.close(confirmIndex); 
+                     }
+                 );
+                 return false; // 阻止表单默认提交
+             });
+     
+     
+         });
+</script>
+
+</body>
+</html>

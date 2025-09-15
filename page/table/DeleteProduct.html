@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>layui - 商品删除</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../../lib/layui-v2.6.3/css/layui.css" media="all">
+    <link rel="stylesheet" href="../../css/public.css" media="all">
+    <style>
+        .myrequired {
+            color: #FF4D4F; /* 更醒目的红色，符合警示场景 */
+            font-weight: 500;
+            margin-right: 4px;
+        }
+        body {
+            background-color: #fff;
+            padding: 24px;
+        }
+        /* 商品信息区：优化边框和阴影，提升质感 */
+        .product-info {
+            border: 1px solid #ebeef5;
+            border-radius: 6px;
+            padding: 18px;
+            margin: 16px 0 24px;
+            background-color: #fafafa;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        .info-item {
+            margin: 10px 0;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        .info-label {
+            display: inline-block;
+            width: 100px;
+            color: #666;
+            font-weight: 500;
+        }
+        /* 标题优化：统一风格 */
+        .layui-title {
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #ebeef5;
+        }
+        /* 按钮间距优化 */
+        .layui-btn + .layui-btn {
+            margin-left: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="layui-form layuimini-form">
+        <!-- 新增：人工输入商品编号（必填+整数校验） -->
+        <div class="layui-form-item">
+            <label class="layui-form-label">
+                <span class="myrequired">*</span>商品编号
+            </label>
+            <div class="layui-input-block">
+                <input type="text" 
+                       name="inputProductCode" 
+                       lay-verify="required|checkCode" 
+                       placeholder="请输入待删除商品的编号（仅整数）" 
+                       class="layui-input">
+            </div>
+        </div>
+
+        <!-- 商品信息展示区：保留原结构，优化样式 -->
+        <div class="product-info">
+            <h3 class="layui-title">确认删除商品信息</h3>
+            <div class="info-item">
+                <span class="info-label">编号</span>
+                <span id="productCode">APP-20240915-001</span> <!-- 实际项目由接口/父页面传参 -->
+            </div>
+            <div class="info-item">
+                <span class="info-label">名称</span>
+                <span id="productName">2024新款纯棉男士短袖T恤</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">类别</span>
+                <span id="productCategory">服装鞋帽类</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">供应商</span>
+                <span id="supplier">XX服饰供应链</span>
+            </div>
+        </div>
+
+        <!-- 删除原因：保留必填 -->
+        <div class="layui-form-item">
+            <label class="layui-form-label">
+                <span class="myrequired">*</span>删除原因
+            </label>
+            <div class="layui-input-block">
+                <select name="deleteReason" lay-verify="required" lay-search>
+                    <option value="">请选择删除原因</option>
+                    <option value="信息错误">商品信息录入错误</option>
+                    <option value="重复录入">商品重复创建</option>
+                    <option value="商品下架">商品永久下架</option>
+                    <option value="其他">其他原因</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- 操作按钮：优化间距 -->
+        <div class="layui-form-item">
+            <div class="layui-input-block">
+                <button class="layui-btn layui-btn-danger" lay-submit lay-filter="deleteBtn">确认删除</button>
+                <button type="button" class="layui-btn layui-btn-primary" id="cancelBtn">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../../lib/layui-v2.6.3/layui.js" charset="utf-8"></script>
+    <script>
+        layui.use(['form', 'layer'], function () {
+            var form = layui.form
+                , layer = layui.layer;
+
+            // 1. 自定义校验：商品编号必须为整数
+            form.verify({
+                checkCode: function (value) {
+                    const reg = /^[1-9]\d*$|^0$/;
+                    if (!reg.test(value)) {
+                        return "商品编号必须是整数（0或正整数）";
+                    }
+                }
+            });
+
+            // 2. 监听确认删除：二次风险提示
+            form.on('submit(deleteBtn)', function (data) {
+                const inputCode = data.field.inputProductCode;
+                layer.confirm(`⚠️ 警告：删除商品编号【${inputCode}】后不可恢复，确认继续？`, {
+                    title: '删除风险提示',
+                    icon: 2,
+                    btn: ['确认删除', '取消'],
+                    btnAlign: 'c'
+                }, function (index1) {
+                    // 模拟接口提交（实际替换为真实删除接口）
+                    setTimeout(function () {
+                        layer.alert(`商品编号【${inputCode}】删除成功！`, {
+                            title: '操作成功',
+                            icon: 1,
+                            end: function () {
+                                parent.layer.close(parent.layer.getFrameIndex(window.name));
+                            }
+                        });
+                    }, 500);
+                    layer.close(index1);
+                });
+                return false;
+            });
+
+            // 3. 监听取消：关闭窗口
+            document.getElementById('cancelBtn').onclick = function () {
+                parent.layer.close(parent.layer.getFrameIndex(window.name));
+            };
+
+            // 初始化表单
+            form.render();
+        });
+    </script>
+</body>
+</html>
