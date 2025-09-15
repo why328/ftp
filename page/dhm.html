@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>自由交易平台 - 纠纷处理</title>
+    <link rel="stylesheet" href="../lib/layui-v2.6.3/css/layui.css">
+    <style>
+        body { margin: 0; padding: 0; background-color: #f5f6f8; min-height: 100vh; }
+        .header { height: 50px; line-height: 50px; background-color: #2f4050; color: #fff; padding: 0 20px; }
+        .header-title { font-size: 16px; font-weight: 600; float: left; }
+        .header-operate { float: right; }
+        .header-btn { margin-left: 15px; color: #fff; cursor: pointer; }
+        
+        .main-container { padding: 20px; height: calc(100vh - 90px); box-sizing: border-box; }
+        .dispute-card { background: #fff; border-radius: 4px; padding: 20px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); height: 100%; display: flex; flex-direction: column; }
+        
+        .section-title { font-size: 16px; font-weight: 600; color: #1E9FFF; padding-bottom: 15px; border-bottom: 1px solid #eee; margin-bottom: 20px; }
+        
+        .filter-area { padding: 15px; background-color: #f9f9f9; border-radius: 4px; margin-bottom: 20px; }
+        .dispute-list { flex: 1; overflow: auto; }
+        
+        .layui-form-item { margin-bottom: 15px; }
+        .empty-state { text-align: center; padding: 60px 0; color: #999; }
+        .empty-state i { font-size: 48px; margin-bottom: 15px; display: block; }
+        
+        /* 状态标签样式 */
+        .status-tag { padding: 2px 8px; border-radius: 4px; font-size: 12px; }
+        .status-new { background-color: #ffeeba; color: #856404; }
+        .status-processing { background-color: #d1ecf1; color: #0c5460; }
+        .status-resolved { background-color: #d4edda; color: #155724; }
+        .status-closed { background-color: #f8d7da; color: #721c24; }
+        
+        /* 操作按钮样式 */
+        .operate-btn { margin-right: 5px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-title">纠纷处理管理</div>
+        <div class="header-operate">
+            <span class="header-btn" id="refresh-page"><i class="layui-icon layui-icon-refresh"></i> 刷新</span>
+            <span class="header-btn" id="help-guide"><i class="layui-icon layui-icon-help"></i> 操作指南</span>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="dispute-card">
+            <div class="section-title">纠纷列表</div>
+            
+            <!-- 筛选区域 -->
+            <div class="filter-area">
+                <form class="layui-form" lay-filter="dispute-filter-form">
+                    <div class="layui-form-item">
+                        <div class="layui-input-inline" style="width: 180px;">
+                            <input type="text" name="disputeId" placeholder="纠纷ID" class="layui-input">
+                        </div>
+                        <div class="layui-input-inline" style="width: 180px;">
+                            <input type="text" name="tradeId" placeholder="关联交易ID" class="layui-input">
+                        </div>
+                        <div class="layui-input-inline" style="width: 180px;">
+                            <input type="text" name="userId" placeholder="用户ID/工号" class="layui-input">
+                        </div>
+                        <div class="layui-input-inline" style="width: 160px;">
+                            <select name="disputeStatus">
+                                <option value="">全部状态</option>
+                                <option value="new">新发起</option>
+                                <option value="processing">处理中</option>
+                                <option value="resolved">已解决</option>
+                                <option value="closed">已关闭</option>
+                            </select>
+                        </div>
+                        <div class="layui-input-inline" style="width: 160px;">
+                            <select name="disputeType">
+                                <option value="">全部类型</option>
+                                <option value="quality">商品质量问题</option>
+                                <option value="payment">付款问题</option>
+                                <option value="other">其他问题</option>
+                            </select>
+                        </div>
+                        <button class="layui-btn layui-btn-normal" type="submit" lay-submit lay-filter="do-search">
+                            <i class="layui-icon layui-icon-search"></i> 查询
+                        </button>
+                        <button class="layui-btn layui-btn-primary" type="button" id="clear-filter">
+                            <i class="layui-icon layui-icon-eraser"></i> 清空
+                        </button>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- 纠纷列表 -->
+            <div class="dispute-list">
+                <table class="layui-table" lay-size="sm" lay-even>
+                    <thead>
+                        <tr>
+                            <th style="width: 100px;">纠纷ID</th>
+                            <th style="width: 100px;">交易ID</th>
+                            <th>用户</th>
+                            <th>纠纷类型</th>
+                            <th>发起时间</th>
+                            <th>状态</th>
+                            <th>处理人</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dispute-table-body">
+                        <!-- 初始空状态 -->
+                        <tr>
+                            <td colspan="8" class="empty-state">
+                                <i class="layui-icon layui-icon-notice" style="color: #ddd;"></i>
+                                <p>暂无纠纷记录，请使用上方筛选条件查询</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 引入Layui核心JS -->
+    <script src="../lib/layui-v2.6.3/layui.js"></script>
+    <script>
+        layui.use(['form', 'layer', 'jquery'], function() {
+            var form = layui.form,
+                layer = layui.layer,
+                $ = layui.jquery;
+
+            // 页面加载时模拟查询
+            setTimeout(function() {
+                form.onSubmit('do-search')();
+            }, 500);
+
+            // 执行查询
+            form.on('submit(do-search)', function(data) {
+                var params = data.field;
+                
+                // 显示加载中状态
+                $('#dispute-table-body').html('<tr><td colspan="8" class="empty-state"><i class="layui-icon layui-icon-loading layui-icon-anim-rotate" style="color: #1E9FFF;"></i><p>正在查询数据...</p></td></tr>');
+                
+                // 模拟API请求延迟
+                setTimeout(function() {
+                    // 模拟纠纷数据
+                    var mockDisputes = [
+                        {
+                            disputeId: params.disputeId || 'DIS20240925001',
+                            tradeId: params.tradeId || 'TRA20240920001',
+                            parties: '2024001(张三)',  // 纠纷发起用户
+                            type: 'quality',
+                            typeText: '商品质量问题',
+                            createTime: '2024-09-25 10:23',
+                            status: params.disputeStatus || 'new',
+                            handler: 'admin'
+                        },
+                        {
+                            disputeId: 'DIS20240924003',
+                            tradeId: 'TRA20240919005',
+                            parties: '2023078(技术部代表)',  // 改为用户字段
+                            type: 'other',
+                            typeText: '其他问题',
+                            createTime: '2024-09-24 16:45',
+                            status: 'processing',
+                            handler: 'operator1'
+                        },
+                        {
+                            disputeId: 'DIS20240923002',
+                            tradeId: 'TRA20240918012',
+                            parties: '2024010(王五)',
+                            type: 'payment',
+                            typeText: '付款问题',
+                            createTime: '2024-09-23 09:15',
+                            status: 'resolved',
+                            handler: 'admin'
+                        }
+                    ];
+
+                    // 渲染纠纷列表
+                    renderDisputeList(mockDisputes);
+                }, 800);
+                
+                return false;
+            });
+
+            // 渲染纠纷列表
+            function renderDisputeList(disputes) {
+                if (disputes.length === 0) {
+                    $('#dispute-table-body').html(`
+                        <tr>
+                            <td colspan="8" class="empty-state">
+                                <i class="layui-icon layui-icon-info-circle" style="color: #ddd;"></i>
+                                <p>未找到符合条件的纠纷记录</p>
+                            </td>
+                        </tr>
+                    `);
+                    return;
+                }
+
+                // 状态映射
+                var statusMap = {
+                    'new': { text: '新发起', class: 'status-new' },
+                    'processing': { text: '处理中', class: 'status-processing' },
+                    'resolved': { text: '已解决', class: 'status-resolved' },
+                    'closed': { text: '已关闭', class: 'status-closed' }
+                };
+
+                var html = '';
+                disputes.forEach(item => {
+                    var status = statusMap[item.status] || statusMap['new'];
+                    html += `
+                    <tr>
+                        <td>${item.disputeId}</td>
+                        <td>${item.tradeId}</td>
+                        <td>${item.parties}</td>
+                        <td>${item.typeText}</td>
+                        <td>${item.createTime}</td>
+                        <td><span class="status-tag ${status.class}">${status.text}</span></td>
+                        <td>${item.handler}</td>
+                        <td>
+                            ${item.status !== 'resolved' && item.status !== 'closed' ? 
+                                `<button class="layui-btn layui-btn-xs layui-btn-primary operate-btn" onclick="handleDispute('${item.disputeId}')">处理纠纷</button>` : 
+                                ''}
+                        </td>
+                    </tr>
+                    `;
+                });
+
+                $('#dispute-table-body').html(html);
+            }
+
+            // 清空筛选条件
+            $('#clear-filter').click(function() {
+                $('form[lay-filter="dispute-filter-form"]')[0].reset();
+                form.render();
+                $('#dispute-table-body').html(`
+                    <tr>
+                        <td colspan="8" class="empty-state">
+                            <i class="layui-icon layui-icon-notice" style="color: #ddd;"></i>
+                            <p>暂无纠纷记录，请使用上方筛选条件查询</p>
+                        </td>
+                    </tr>
+                `);
+            });
+
+            // 刷新页面
+            $('#refresh-page').click(function() {
+                location.reload();
+            });
+
+            // 操作指南
+            $('#help-guide').click(function() {
+                layer.open({
+                    type: 1,
+                    title: '纠纷处理操作指南',
+                    area: ['600px', '350px'],
+                    content: `
+                        <div style="padding: 20px;">
+                            <p>1. 纠纷查询：通过纠纷ID、交易ID、用户ID等条件筛选纠纷记录</p>
+                            <p>2. 纠纷处理流程：</p>
+                            <p>&nbsp;&nbsp;- 处理纠纷：与相关用户沟通，提出解决方案</p>
+                            <p>&nbsp;&nbsp;- 标记结果：将纠纷状态更新为"已解决"或"已关闭"</p>
+                            <p>3. 纠纷类型说明：</p>
+                            <p>&nbsp;&nbsp;- 商品质量问题：商品与描述不符或存在质量缺陷</p>
+                            <p>&nbsp;&nbsp;- 付款问题：付款延迟、金额争议等</p>
+                            <p>&nbsp;&nbsp;- 其他问题：不属于上述类别的其他争议</p>
+                        </div>
+                    `
+                });
+            });
+
+            // 处理纠纷
+            window.handleDispute = function(disputeId) {
+                layer.open({
+                    type: 1,
+                    title: `处理纠纷 - ${disputeId}`,
+                    area: ['600px', '400px'],
+                    content: `
+                        <div style="padding: 20px;">
+                            <form class="layui-form" lay-filter="dispute-handle-form">
+                                <input type="hidden" name="disputeId" value="${disputeId}">
+                                
+                                <div class="layui-form-item">
+                                    <label class="layui-form-label">处理结果</label>
+                                    <div class="layui-input-block">
+                                        <select name="handleResult" lay-verify="required">
+                                            <option value="">请选择处理结果</option>
+                                            <option value="refund">同意退款</option>
+                                            <option value="returnRefund">同意退货退款</option>
+                                            <option value="partialRefund">部分退款</option>
+                                            <option value="reject">驳回申请</option>
+                                            <option value="mediation">调解处理</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="layui-form-item">
+                                    <label class="layui-form-label">处理备注</label>
+                                    <div class="layui-input-block">
+                                        <textarea name="handleRemark" placeholder="请输入处理说明和依据" class="layui-textarea" lay-verify="required"></textarea>
+                                    </div>
+                                </div>
+                                
+                                <div class="layui-form-item">
+                                    <label class="layui-form-label">更新状态</label>
+                                    <div class="layui-input-block">
+                                        <div class="layui-radio-inline">
+                                            <input type="radio" name="newStatus" value="processing" title="处理中" checked>
+                                        </div>
+                                        <div class="layui-radio-inline">
+                                            <input type="radio" name="newStatus" value="resolved" title="已解决">
+                                        </div>
+                                        <div class="layui-radio-inline">
+                                            <input type="radio" name="newStatus" value="closed" title="已关闭">
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="layui-form-item" style="text-align: right;">
+                                    <button class="layui-btn" type="submit" lay-submit lay-filter="submit-handle">提交处理结果</button>
+                                </div>
+                            </form>
+                        </div>
+                    `,
+                    success: function() {
+                        form.render();
+                        
+                        // 提交处理结果
+                        form.on('submit(submit-handle)', function(data) {
+                            layer.confirm('确定提交处理结果吗？', function(index) {
+                                layer.close(index);
+                                layer.msg('处理结果已提交', {icon: 1, time: 1000}, function() {
+                                    // 关闭弹窗并刷新列表
+                                    layer.closeAll('page');
+                                    form.onSubmit('do-search')();
+                                });
+                            });
+                            return false;
+                        });
+                    }
+                });
+            };
+        });
+    </script>
+</body>
+</html>
+    

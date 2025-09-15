@@ -1,0 +1,145 @@
+{
+  "homeInfo": {
+    "title": "首页",
+    "href": "page/homepage.html?t=1"
+  },
+  "logoInfo": {
+    "title": "自由商品",
+    "image": "images/transaction.jpeg",
+    "href": ""
+  },
+  "menuInfo": [
+    {
+      "title": "系统管理",
+      "icon": "fa fa-address-book",
+      "href": "",
+      "target": "_self",
+      "child": [
+        {  
+              "title": "首页",
+              "href": "page/homepage.html",
+              "icon": "fa fa-pied-piper-alt",
+              "target": "_self"
+        },
+        {
+          "title": "用户管理",
+          "href": "",
+          "icon": "fa fa-window-maximize",
+          "target": "_self",
+		  "child": [
+		{
+		  "title": "查询用户",
+		  "href": "page/queryuser.html",
+		  "icon": "fa fa-window-maximize",
+		  "target": "_self"
+		},
+		{
+		  "title": "添加用户",
+		  "href": "page/table/AddUser.html",
+		  "icon": "fa fa-window-maximize",
+		  "target": "_self"
+		},
+		{
+		  "title": "修改用户",
+		  "href": "page/table/EditUser.html",
+		  "icon": "fa fa-window-maximize",
+		  "target": "_self"
+		},
+		{
+		  "title": "删除用户",
+		  "href": "page/table/DeleteUser.html",
+		  "icon": "fa fa-window-maximize",
+		  "target": "_self"
+		}
+		]
+		},
+
+        {
+          "title": "商品管理",
+          "href": "",
+          "icon": "fa fa-shopping-cart",
+          "target": "_self",
+		  "child": [
+		{
+		  "title": "商品查询",
+		  "href": "page/productinquiry.html",
+		  "icon": "fa fa-search",
+		  "target": "_self"
+		},
+		{
+		  "title": "商品新增",
+		  "href": "page/table/AddProduct.html",
+		  "icon": "fa fa-cart-plus",
+		  "target": "_self"
+		},
+		{
+		  "title": "商品修改",
+		  "href": "page/table/EditProduct.html",
+		  "icon": "fa fa-file-text",
+		  "target": "_self"
+		},
+		{
+		  "title": "商品删除",
+		  "href": "page/table/DeleteProduct.html",
+		  "icon": "fa fa-cart-arrow-down",
+		  "target": "_self"
+		}
+		]
+		},
+        {
+          "title": "交易管理",
+          "href": "",
+          "icon": "fa fa-calendar",
+          "target": "_self",
+          "child": [
+            {
+              "title": "交易新增",
+              "href": "page/newtransaction.html",
+              "icon": "fa fa-list-alt",
+              "target": "_self"
+            },
+            {
+              "title": "交易查询",
+              "href": "page/form-step.html",
+              "icon": "fa fa-navicon",
+              "target": "_self"
+            }
+          ]
+        },
+        {
+          "title": "纠纷处理管理",
+          "href": "page/dhm.html",
+          "icon": "fa fa-flag-o",
+          "target": "_self"
+        },
+        {
+          "title": "评价管理",
+          "href": "",
+          "icon": "fa fa-snowflake-o",
+          "target": "_self",
+		  "child": [
+		  	{
+		  	    "title": "评价查询",
+		  	    "href": "page/rq.html",
+		  	    "icon": "fa fa-navicon",
+		  	    "target": "_self"
+		  	  },
+		  	  {
+		  	    "title": "评价统计与回复",
+		  	    "href": "page/pl.html",
+		  	    "icon": "fa fa-navicon",
+		  	    "target": "_self"
+		  	  }
+		  	]
+        },
+		{
+		  "title": "系统设置",
+		  "href": "page/setting.html",
+		  "icon": "fa fa-gears",
+		  "target": "_self"
+		}
+      ]
+    }
+    
+  ]
+}

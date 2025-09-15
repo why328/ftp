@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>交易管理 - 快速查询</title>
+    <link rel="stylesheet" href="../lib/layui-v2.6.3/css/layui.css">
+    <style>
+        body { margin: 0; padding: 0; background-color: #f5f6f8; min-height: 100vh; }
+        .header { height: 50px; line-height: 50px; background-color: #2f4050; color: #fff; padding: 0 20px; }
+        .header-title { font-size: 16px; font-weight: 600; float: left; }
+        .header-operate { float: right; }
+        .header-btn { margin-left: 15px; color: #fff; cursor: pointer; }
+        
+        .main-container { padding: 20px; height: calc(100vh - 90px); box-sizing: border-box; }
+        .query-card { background: #fff; border-radius: 4px; padding: 20px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); height: 100%; display: flex; flex-direction: column; }
+        
+        .section-title { font-size: 16px; font-weight: 600; color: #1E9FFF; padding-bottom: 15px; border-bottom: 1px solid #eee; margin-bottom: 20px; }
+        
+        .query-filters { padding: 15px; background-color: #f9f9f9; border-radius: 4px; margin-bottom: 20px; }
+        .result-area { flex: 1; overflow: auto; }
+        
+        .layui-form-item { margin-bottom: 15px; }
+        .empty-state { text-align: center; padding: 60px 0; color: #999; }
+        .empty-state i { font-size: 48px; margin-bottom: 15px; display: block; }
+        
+        /* 状态标签样式 */
+        .status-tag { padding: 2px 8px; border-radius: 4px; font-size: 12px; }
+        .status-processing { background-color: #d1ecf1; color: #0c5460; }
+        .status-completed { background-color: #d4edda; color: #155724; }
+        
+        /* 操作按钮样式 */
+        .operate-btn { margin-right: 5px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-title">交易快速查询</div>
+        <div class="header-operate">
+            <span class="header-btn" id="refresh-page"><i class="layui-icon layui-icon-refresh"></i> 刷新</span>
+            <span class="header-btn" id="advanced-filter"><i class="layui-icon layui-icon-filter"></i> 高级筛选</span>
+            <span class="header-btn" id="to-add-page"><i class="layui-icon layui-icon-add-circle"></i> 新增交易</span>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="query-card">
+            <div class="section-title">交易查询</div>
+            
+            <!-- 查询条件区 -->
+            <div class="query-filters">
+                <form class="layui-form" lay-filter="trade-query-form">
+                    <div class="layui-form-item">
+                        <div class="layui-input-inline" style="width: 200px;">
+                            <input type="text" name="tradeId" placeholder="交易ID" class="layui-input">
+                        </div>
+                        <div class="layui-input-inline" style="width: 200px;">
+                            <input type="text" name="goodsId" placeholder="商品ID" class="layui-input">
+                        </div>
+                        <div class="layui-input-inline" style="width: 200px;">
+                            <input type="text" name="userNo" placeholder="买家/卖家工号" class="layui-input">
+                        </div>
+                        <div class="layui-input-inline" style="width: 180px;">
+                            <select name="tradeStatus">
+                                <option value="">全部状态</option>
+                                <option value="pendingPayment">待付款</option>
+                                <option value="pendingAudit">待审核</option>
+                                <option value="completed">已完成</option>
+                            </select>
+                        </div>
+                        <button class="layui-btn layui-btn-normal" type="submit" lay-submit lay-filter="do-query">
+                            <i class="layui-icon layui-icon-search"></i> 查询
+                        </button>
+                        <button class="layui-btn layui-btn-primary" type="button" id="clear-filters">
+                            <i class="layui-icon layui-icon-eraser"></i> 清空
+                        </button>
+                    </div>
+                    
+                    <!-- 高级筛选条件（已删除交易类型筛选） -->
+                    <div class="layui-form-item" id="advanced-filters" style="display: none; margin-top: 15px; padding-top: 15px; border-top: 1px dashed #eee;">
+                        <div class="layui-input-inline" style="width: 200px;">
+                            <input type="text" name="minAmount" placeholder="最小金额" class="layui-input">
+                        </div>
+                        <div class="layui-input-inline" style="width: 200px;">
+                            <input type="text" name="maxAmount" placeholder="最大金额" class="layui-input">
+                        </div>
+                        <div class="layui-input-inline" style="width: 200px;">
+                            <input type="text" name="createTime" placeholder="创建时间范围" class="layui-input" id="date-range">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- 查询结果区 -->
+            <div class="result-area">
+                <table class="layui-table" lay-size="sm" lay-even>
+                    <thead>
+                        <tr>
+                            <th style="width: 120px;">交易ID</th>
+                            <th>交易双方</th>
+                            <th>商品信息</th>
+                            <th>金额(元)</th>
+                            <th>状态</th>
+                            <th>创建时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="query-results">
+                        <!-- 初始空状态 -->
+                        <tr>
+                            <td colspan="7" class="empty-state">
+                                <i class="layui-icon layui-icon-search" style="color: #ddd;"></i>
+                                <p>请输入查询条件并点击查询按钮</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 引入Layui核心JS -->
+    <script src="../lib/layui-v2.6.3/layui.js"></script>
+    <script>
+        layui.use(['form', 'layer', 'jquery', 'laydate'], function() {
+            var form = layui.form,
+                layer = layui.layer,
+                $ = layui.jquery,
+                laydate = layui.laydate;
+
+            // 初始化日期范围选择器
+            laydate.render({
+                elem: '#date-range',
+                range: true,
+                format: 'yyyy-MM-dd'
+            });
+
+            // 切换高级筛选显示/隐藏
+            $('#advanced-filter').click(function() {
+                $('#advanced-filters').toggle();
+            });
+
+            // 执行查询
+            form.on('submit(do-query)', function(data) {
+                var params = data.field;
+                
+                // 显示加载中状态
+                $('#query-results').html('<tr><td colspan="7" class="empty-state"><i class="layui-icon layui-icon-loading layui-icon-anim-rotate" style="color: #1E9FFF;"></i><p>正在查询数据...</p></td></tr>');
+                
+                // 模拟API请求延迟
+                setTimeout(function() {
+                    // 模拟查询结果（已移除交易类型字段）
+                    var mockResults = [
+                        {
+                            tradeId: params.tradeId || 'TRA20240920001',
+                            tradeUsers: '买家：2024001(张三) → 卖家：2023056(李四)',
+                            goodsInfo: params.goodsId ? `联想笔记本(${params.goodsId})` : '华为手机(GOOD202409002)',
+                            amount: '3500.00',
+                            status: 'pendingPayment', // 已移除待交割状态
+                            createTime: '2024-09-20 09:35'
+                        },
+                        {
+                            tradeId: 'TRA20240919005',
+                            tradeUsers: '买家：2024013(大明) → 卖家：2024006(小红)',
+                            goodsInfo: '投影仪(GOOD202408156)',
+                            amount: '0.00',
+                            status: 'completed',
+                            createTime: '2024-09-19 14:20'
+                        },
+                        {
+                            tradeId: 'TRA20240918012',
+                            tradeUsers: '买家：2024010(王五) → 卖家：2024008(赵六)',
+                            goodsInfo: '测试设备(GOOD202407008)',
+                            amount: '500.00',
+                            status: 'pendingAudit',
+                            createTime: '2024-09-18 16:45'
+                        }
+                    ];
+
+                    // 渲染查询结果
+                    renderResults(mockResults);
+                }, 800);
+                
+                return false;
+            });
+
+            // 渲染查询结果
+            function renderResults(results) {
+                if (results.length === 0) {
+                    $('#query-results').html(`
+                        <tr>
+                            <td colspan="7" class="empty-state">
+                                <i class="layui-icon layui-icon-info-circle" style="color: #ddd;"></i>
+                                <p>未找到符合条件的交易记录</p>
+                            </td>
+                        </tr>
+                    `);
+                    return;
+                }
+
+                // 状态映射（已移除待交割状态）
+                var statusMap = {
+                    'pendingPayment': { text: '待付款', class: 'status-processing' },
+                    'pendingAudit': { text: '待审核', class: 'status-processing' },
+                    'completed': { text: '已完成', class: 'status-completed' }
+                };
+
+                var html = '';
+                results.forEach(item => {
+                    var status = statusMap[item.status] || statusMap['pendingPayment'];
+                    html += `
+                    <tr>
+                        <td>${item.tradeId}</td>
+                        <td>${item.tradeUsers}</td>
+                        <td>${item.goodsInfo}</td>
+                        <td>${item.amount}</td>
+                        <td><span class="status-tag ${status.class}">${status.text}</span></td>
+                        <td>${item.createTime}</td>
+                        <td>
+                            <button class="layui-btn layui-btn-xs operate-btn" onclick="viewDetail('${item.tradeId}')">查看详情</button>
+                            <button class="layui-btn layui-btn-xs layui-btn-primary operate-btn" onclick="editStatus('${item.tradeId}')">修改状态</button>
+                        </td>
+                    </tr>
+                    `;
+                });
+
+                $('#query-results').html(html);
+            }
+
+            // 清空查询条件
+            $('#clear-filters').click(function() {
+                $('form[lay-filter="trade-query-form"]')[0].reset();
+                form.render();
+                $('#query-results').html(`
+                    <tr>
+                        <td colspan="7" class="empty-state">
+                            <i class="layui-icon layui-icon-search" style="color: #ddd;"></i>
+                            <p>请输入查询条件并点击查询按钮</p>
+                        </td>
+                    </tr>
+                `);
+            });
+
+            // 刷新页面
+            $('#refresh-page').click(function() {
+                location.reload();
+            });
+
+            // 跳转到新增交易页面
+            $('#to-add-page').click(function() {
+                window.location.href = 'trade-add.html';
+            });
+
+            // 查看详情
+            window.viewDetail = function(tradeId) {
+                layer.open({
+                    type: 2,
+                    title: `交易详情 - ${tradeId}`,
+                    area: ['800px', '600px'],
+                    content: `trade-detail.html?id=${tradeId}`,
+                    shade: 0.3
+                });
+            };
+
+            // 修改状态（已移除待交割选项）
+            window.editStatus = function(tradeId) {
+                layer.open({
+                    type: 1,
+                    title: `修改交易状态 - ${tradeId}`,
+                    area: ['400px', '300px'],
+                    content: `
+                        <div style="padding: 20px;">
+                            <form class="layui-form" lay-filter="status-form">
+                                <input type="hidden" name="tradeId" value="${tradeId}">
+                                <div class="layui-form-item">
+                                    <label class="layui-form-label">当前状态</label>
+                                    <div class="layui-input-block">
+                                        <input type="text" value="待付款" disabled class="layui-input layui-disabled">
+                                    </div>
+                                </div>
+                                <div class="layui-form-item">
+                                    <label class="layui-form-label">新状态</label>
+                                    <div class="layui-input-block">
+                                        <select name="newStatus" lay-verify="required">
+                                            <option value="pendingPayment">待付款</option>
+                                            <option value="pendingAudit">待审核</option>
+                                            <option value="completed">已完成</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="layui-form-item">
+                                    <label class="layui-form-label">备注</label>
+                                    <div class="layui-input-block">
+                                        <textarea name="remark" placeholder="请输入状态变更原因" class="layui-textarea"></textarea>
+                                    </div>
+                                </div>
+                                <div class="layui-form-item" style="text-align: right;">
+                                    <button class="layui-btn" type="submit" lay-submit lay-filter="submit-status">确认修改</button>
+                                </div>
+                            </form>
+                        </div>
+                    `,
+                    success: function() {
+                        form.render();
+                        
+                        // 提交状态修改
+                        form.on('submit(submit-status)', function(data) {
+                            layer.confirm('确定要修改该交易状态吗？', function(index) {
+                                layer.close(index);
+                                layer.msg('状态修改成功', {icon: 1, time: 1000}, function() {
+                                    layer.closeAll('page');
+                                    form.onSubmit('do-query')();
+                                });
+                            });
+                            return false;
+                        });
+                    }
+                });
+            };
+        });
+    </script>
+</body>
+</html>
+    

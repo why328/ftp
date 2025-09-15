@@ -1,0 +1,67 @@
+{
+  "code": 0,
+  "msg": "",
+  "count": 5000,
+  "data": [
+    {
+      "id": 10000,
+      "ProductCategory": "服装鞋帽类",
+      "ProductName": "男士纯棉休闲T恤",
+      "Number": "150"
+    },
+    {
+      "id": 10001,
+      "ProductCategory": "数码家电类",
+      "ProductName": "家用小型电饭煲",
+      "Number": "20"
+    },
+    {
+      "id": 10002,
+      "ProductCategory": "家具生活类",
+      "ProductName": "客厅布艺沙发",
+      "Number": "10"
+    },
+    {
+      "id": 10003,
+      "ProductCategory": "美妆个护类",
+      "ProductName": "保湿修护精华液",
+      "Number": "48"
+    },
+    {
+      "id": 10004,
+      "ProductCategory": "户外运动类",
+      "ProductName": "轻便防滑徒步鞋",
+      "Number": "60"
+    },
+    {
+      "id": 10005,
+      "ProductCategory": "服装鞋帽类",
+      "ProductName": "女士高腰牛仔半身裙",
+      "Number": "36"
+    },
+    {
+      "id": 10006,
+      "ProductCategory": "数码家电类",
+      "ProductName": "无线便携蓝牙音箱",
+      "Number": "52"
+    },
+    {
+      "id": 10007,
+      "ProductCategory": "家具生活类",
+      "ProductName": "卧室实木床头柜",
+      "Number": "15"
+    },
+    {
+      "id": 10008,
+      "ProductCategory": "美妆个护类",
+      "ProductName": "温和氨基酸洁面乳",
+      "Number": "30"
+    },
+    {
+      "id": 10009,
+      "ProductCategory": "户外运动类",
+      "ProductName": "折叠防晒遮阳帽",
+      "Number": "47"
+    }
+  ]
+}

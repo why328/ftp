@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>交易管理 - 新增交易</title>
+    <link rel="stylesheet" href="../lib/layui-v2.6.3/css/layui.css">
+    <style>
+        body { margin: 0; padding: 0; background-color: #f5f6f8; }
+        .header { height: 50px; line-height: 50px; background-color: #2f4050; color: #fff; padding: 0 20px; }
+        .header-title { font-size: 16px; font-weight: 600; float: left; }
+        .header-operate { float: right; }
+        .header-btn { margin-left: 15px; color: #fff; cursor: pointer; }
+        
+        .main-container { padding: 20px; }
+        .form-area { max-width: 800px; margin: 0 auto; background: #fff; border-radius: 4px; padding: 20px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        
+        .section-title { font-size: 14px; font-weight: 600; color: #1E9FFF; padding-bottom: 10px; border-bottom: 1px solid #eee; margin-bottom: 15px; }
+        .form-group { margin-bottom: 20px; padding-left: 10px; border-left: 3px solid #1E9FFF; }
+        .form-group-title { margin-bottom: 10px; font-weight: 500; }
+        
+        .layui-form-item { margin-bottom: 15px; }
+        .layui-form-label { width: 120px; padding: 9px 5px; }
+        .layui-input-block { margin-left: 130px; }
+        .required-mark { color: #ff4d4f; margin-right: 3px; }
+        
+        .form-btn-group { margin-top: 20px; text-align: right; }
+        .layui-btn-normal { background-color: #1E9FFF; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-title">新增交易</div>
+    </div>
+
+    <div class="main-container">
+        <div class="form-area">
+            <div class="section-title">交易信息录入</div>
+            <form class="layui-form" lay-filter="trade-add-form">
+                <!-- 基础信息组 -->
+                <div class="form-group">
+                    <div class="form-group-title">基础信息</div>
+                    <div class="layui-form-item">
+                        <label class="layui-form-label"><span class="required-mark">*</span>买家ID</label>
+                        <div class="layui-input-block">
+                            <input type="text" name="buyerNo" lay-verify="required" placeholder="请输入买家ID" class="layui-input">
+                        </div>
+                    </div>
+
+                    <div class="layui-form-item">
+                        <label class="layui-form-label"><span class="required-mark">*</span>卖家ID</label>
+                        <div class="layui-input-block">
+                            <input type="text" name="sellerNo" lay-verify="required" placeholder="请输入卖家ID" class="layui-input">
+                        </div>
+                    </div>
+
+                    <div class="layui-form-item">
+                        <label class="layui-form-label"><span class="required-mark">*</span>交易金额</label>
+                        <div class="layui-input-block">
+                            <input type="number" min="0" name="tradeAmount" lay-verify="required" placeholder="单位：元" class="layui-input">
+                        </div>
+                    </div>
+
+                    <div class="layui-form-item">
+                        <label class="layui-form-label"><span class="required-mark">*</span>交易状态</label>
+                        <div class="layui-input-block">
+                            <select name="tradeStatus" lay-verify="required">
+                                <option value="pendingPayment">待付款</option>
+                                <option value="pendingAudit">待审核</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 商品信息组 -->
+                <div class="form-group">
+                    <div class="form-group-title">商品信息</div>
+                    <div class="layui-form-item">
+                        <label class="layui-form-label"><span class="required-mark">*</span>商品关联</label>
+                        <div class="layui-input-block">
+                            <div class="layui-radio-inline">
+                                <input type="radio" name="goodsLinkType" value="existGoods" title="关联已有商品" checked>
+                            </div>
+                            <div class="layui-radio-inline">
+                                <input type="radio" name="goodsLinkType" value="tempGoods" title="新增临时商品">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="layui-form-item" id="existGoodsGroup">
+                        <label class="layui-form-label"><span class="required-mark">*</span>商品ID</label>
+                        <div class="layui-input-block">
+                            <input type="text" name="goodsId" lay-verify="required" placeholder="请输入商品ID" class="layui-input">
+                        </div>
+                    </div>
+
+                    <div class="layui-form-item" id="tempGoodsGroup" style="display: none;">
+                        <label class="layui-form-label"><span class="required-mark">*</span>商品名称</label>
+                        <div class="layui-input-block">
+                            <input type="text" name="tempGoodsName" placeholder="输入临时商品名称" class="layui-input">
+                        </div>
+                    </div>
+                </div>
+                <!-- 提交按钮组 -->
+                <div class="form-btn-group">
+                    <button class="layui-btn layui-btn-primary" type="button" id="reset-form">重置表单</button>
+                    <button class="layui-btn layui-btn-normal" type="submit" lay-submit lay-filter="submit-trade-add">提交新增</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="../lib/layui-v2.6.3/layui.js"></script>
+    <script>
+        layui.use(['form', 'layer', 'jquery'], function() {
+            var form = layui.form,
+                layer = layui.layer,
+                $ = layui.jquery;
+
+            // 商品关联方式切换
+            form.on('radio(goodsLinkType)', function(data) {
+                if (data.value === 'existGoods') {
+                    $('#existGoodsGroup').show();
+                    $('#tempGoodsGroup').hide();
+                    $('input[name="tempGoodsName"]').removeAttr('lay-verify');
+                    $('input[name="goodsId"]').attr('lay-verify', 'required');
+                } else {
+                    $('#existGoodsGroup').hide();
+                    $('#tempGoodsGroup').show();
+                    $('input[name="goodsId"]').removeAttr('lay-verify');
+                    $('input[name="tempGoodsName"]').attr('lay-verify', 'required');
+                }
+                form.render();
+            });
+
+            // 新增交易提交
+            form.on('submit(submit-trade-add)', function(data) {
+                layer.confirm('确认新增该交易？提交后不可删除', {icon: 3, title:'确认提示'}, function(index) {
+                    layer.close(index);
+                    // 模拟提交成功
+                    var tradeId = 'TRA' + new Date().getTime().toString().substr(4, 8);
+                    layer.msg(`交易新增成功！交易ID：${tradeId}`, {icon: 1, time: 2000}, function() {
+                    });
+                });
+                return false;
+            });
+
+            // 重置表单
+            $('#reset-form').click(function() {
+                $('form[lay-filter="trade-add-form"]')[0].reset();
+                $('#existGoodsGroup').show();
+                $('#tempGoodsGroup').hide();
+                $('input[name="goodsLinkType"][value="existGoods"]').prop('checked', true);
+                form.render();
+            });
+
+            // 跳转到查询页面
+            $('#to-query-page').click(function() {
+                window.location.href = 'trade-query.html';
+            });
+        });
+    </script>
+</body>
+</html>
